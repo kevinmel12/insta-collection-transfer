@@ -1,0 +1,6 @@
+.env
+node_modules/
+.venv/
+package-lock.json
+package.json
+requirements.txt
