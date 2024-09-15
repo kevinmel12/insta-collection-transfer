@@ -5,6 +5,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+
+import requests
+from bs4 import BeautifulSoup
+
 import time
 
 # Configurer les options du navigateur
@@ -53,16 +57,55 @@ try:
 
     # Naviguer vers la page de collection
     saves_url = f"https://www.instagram.com/{username}/saved/_/17901925336598446/"
-    browser.get(saves_url)
+    browser.get(saves_url) 
+
 
     # Attendre que la page se charge
     WebDriverWait(browser, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
 
+    time.sleep(10) 
+
+
+    # ------------------------------- EXTRACTION DES LIENS DES PUBLICATIONS -------------------------------
+
+    # Défilement de la page pour charger le contenu
+    SCROLL_PAUSE_TIME = 2
+    last_height = browser.execute_script("return document.body.scrollHeight")
+
+    while True:
+        browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        time.sleep(SCROLL_PAUSE_TIME)
+
+        # Calcule de la nouvelle hauteur de scroll et comparaison avec la dernière hauteur de scroll
+        new_height = browser.execute_script("return document.body.scrollHeight")
+        if new_height == last_height:
+            break
+        last_height = new_height
+    
+
+    # Extraction des liens des publications
+    links = WebDriverWait(browser, 10).until(
+        EC.presence_of_all_elements_located((By.XPATH, "//a[contains(@href, '/p/')]"))
+    )
+
+    # Impression des liens
+    for link in links:
+        print(link.get_attribute('href'))
+
+    # Stock des liens dans un fichier
+    with open('instagram_links.txt', 'w') as f:
+        for link in links:
+            f.write(link.get_attribute('href') + '\n')
+
+    print(f"Nbr total de liens extraits : {len(links)}")
+
+
     # ------------------------------- SECOND COMPTE INSTA -------------------------------
 
 
-    browser2 = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    '''browser2 = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     try:
         # Ouvrir la page web Instagram dans la nouvelle fenêtre
         url = "https://www.instagram.com/"
@@ -106,7 +149,7 @@ try:
         time.sleep(9000)
     finally:
         browser2.quit()
-
+'''
 
     time.sleep(9000)
 finally:
